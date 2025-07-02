@@ -105,25 +105,25 @@ $$
 
 ```python
 print("cos(1) + i * sin(1) * sigma_x = ")
-print(np.cos(1) + 1j * np.sin(1) * sigma_x)
+print(np.cos(1) * np.identity(2) + 1j * np.sin(1) * sigma_x)
 print("cos(1) + i * sin(1) * sigma_y = ")
-print(np.cos(1) + 1j * np.sin(1) * sigma_y)
+print(np.cos(1) * np.identity(2) + 1j * np.sin(1) * sigma_y)
 print("cos(1) + i * sin(1) * sigma_z = ")
-print(np.cos(1) + 1j * np.sin(1) * sigma_z)
+print(np.cos(1) * np.identity(2) + 1j * np.sin(1) * sigma_z)
 ```
 
 运行结果：
 
 ```
 cos(1) + i * sin(1) * sigma_x =
-[[0.54030231+0.j         0.54030231+0.84147098j]
- [0.54030231+0.84147098j 0.54030231+0.j        ]]
+[[0.54030231+0.j         0.        +0.84147098j]
+ [0.        +0.84147098j 0.54030231+0.j        ]]
 cos(1) + i * sin(1) * sigma_y =
-[[ 0.54030231+0.j  1.38177329+0.j]
- [-0.30116868+0.j  0.54030231+0.j]]
+[[ 0.54030231+0.j  0.84147098+0.j]
+ [-0.84147098+0.j  0.54030231+0.j]]
 cos(1) + i * sin(1) * sigma_z =
-[[0.54030231+0.84147098j 0.54030231+0.j        ]
- [0.54030231+0.j         0.54030231-0.84147098j]]
+[[0.54030231+0.84147098j 0.        +0.j        ]
+ [0.        +0.j         0.54030231-0.84147098j]]
 ```
 
 可以看到与前面的输出是一致的。
