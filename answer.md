@@ -129,3 +129,56 @@ cos(1) + i * sin(1) * sigma_z =
 可以看到与前面的输出是一致的。
 
 根据证明过程，只要 $P^2=I$，就有 $e^{ixP}=\cos(x)I+i\sin(x)P$。
+
+## 2-3
+
+运行如下的程序：
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+sigma = [np.array([[0,1],[1,0]]),np.array([[0,-1j],[1j,0]]),np.array([[1,0],[0,-1]])]
+
+def f(typeP,typeQ,theta):
+    P = sigma[typeP]
+    Q = sigma[typeQ]
+
+    v = (np.cos(theta/2) * np.identity(2) + 1j * np.sin(theta/2) * P) @ np.array([1,0])
+    return v.conj().T @ Q @ v
+
+plt.figure(figsize=(7,7))
+x = np.arange(-np.pi,np.pi,0.01)
+
+for (P,Q) in [(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2)]:
+    y = np.array([f(P,Q,theta).real for theta in x])
+    plt.plot(x,y,label = f"(P,Q) = {(P,Q)}")
+
+plt.ylim(-2,2)
+plt.xlim(-np.pi,np.pi)
+plt.legend(loc = 'upper right',ncol = 3)
+plt.show()
+```
+
+（事实上，由于泡利矩阵都是 Hermite 的，因此 $v^\dagger \hat{Q} v$ 总是实数）
+
+输出的效果图为：
+
+![](fig2.png)
+
+可以看到，有很多个图像重合了，且它们的图像与正弦、余弦函数很相似。实际上，有：
+
+$$
+\begin{aligned}
+v^\dagger \hat{Q} v &= (\exp(i\theta/2\hat{P})v_0)^{\dagger}\times  \hat{Q}\times (\exp(i\theta/2\hat{P})v_0)\\
+&=v_0^{\dagger}(\cos(\theta/2)I+i\sin(\theta/2)\hat{P})^{\dagger}\times \hat{Q}\times (\cos(\theta/2)I+i\sin(\theta/2)\hat{P})v_0\\
+&=v_0^{\dagger}(\cos^2(\theta/2)\hat{Q} + i\cos(\theta/2)\sin(\theta/2)\hat{Q}\hat{P}-i\sin(\theta/2)\cos(\theta/2)\hat{P}^{\dagger}\hat{Q}+\sin^2(\theta/2)\hat{P}^{\dagger}\hat{Q}\hat{P})v_0
+\end{aligned}
+$$
+
+对于泡利矩阵 $\hat{P}$，总有 $\hat{P}^{\dagger}=\hat{P}$，且 $\hat{P}\neq \hat{Q}$ 时有 $\hat{P}\hat{Q}=-\hat{Q}\hat{P}$，相等时有 $\hat{P}^2=I$，据此可以化简上式：
+
+- $\hat{P}=\hat{Q}$ 时，上式可化为 $v_0^{\dagger}\hat{P}v_0=\begin{cases}0&,\hat P=\sigma_x,\sigma_y\\1&,\hat P=\sigma_z\end{cases}$
+- $\hat P\neq \hat Q$ 时，上式化为 $v_0^{\dagger}(\cos(\theta)\hat Q+i\sin(\theta)\hat Q\hat P)v_0$，而 $\sigma_x,\sigma_y,\sigma_z$ 中的任意两个按顺序（即 $x,y,z$ 的顺序）的乘积等于虚数单位 $i$ 乘上剩下的一个，于是上式总会化为 $\cos(\theta)$ 或者 $\pm \sin(\theta)$，正负号取决于 $\hat P,\hat Q$ 的顺序
+
+## 2-4
