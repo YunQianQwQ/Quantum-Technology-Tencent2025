@@ -182,3 +182,203 @@ $$
 - $\hat P\neq \hat Q$ 时，上式化为 $v_0^{\dagger}(\cos(\theta)\hat Q+i\sin(\theta)\hat Q\hat P)v_0$，而 $\sigma_x,\sigma_y,\sigma_z$ 中的任意两个按顺序（即 $x,y,z$ 的顺序）的乘积等于虚数单位 $i$ 乘上剩下的一个，于是上式总会化为 $\cos(\theta)$ 或者 $\pm \sin(\theta)$，正负号取决于 $\hat P,\hat Q$ 的顺序
 
 ## 2-4
+
+矩阵的张量积：$A\oplus B$ 可以表示为
+
+$$
+A \otimes B = \begin{bmatrix}
+a_{11}B & \cdots & a_{1m}B \\
+\vdots & \ddots & \vdots \\
+a_{n1}B & \cdots & a_{nm}B
+\end{bmatrix}
+$$
+
+其中 $A$ 是 $n\times m$ 矩阵。
+
+实际上，考虑 $n$ 个 $2\times 2$ 的酉矩阵 $A_1,\cdots,A_n$，将 $A_1\oplus \cdots \oplus A_n$ 展开，可以发现其实际的含义就是对第 $i$ 位施加操作 $A_i$，可以简记为 $A_1A_2\cdots A_n$。
+
+下面的程序朴素地模拟了题目要求的过程，时间复杂度是 $\Theta(n4^n)$ 左右，实际上可以做到 $\Theta(n2^n)$
+
+```python
+import numpy as np
+
+def H(n):
+    I = np.identity(2)
+    X = np.array([[0,1],[1,0]])
+    Z = np.array([[1,0],[0,-1]])
+
+    res = np.zeros((2**n,2**n))
+
+    for i in range(n):
+        mat = np.identity(1)
+        for j in range(n):
+            if i == j :
+                mat = np.kron(mat,Z)
+            else :
+                mat = np.kron(mat,I)
+        res = res + mat
+
+    for i in range(n-1):
+        mat1 = np.identity(1)
+        for j in range(n):
+            if i == j :
+                mat1 = np.kron(mat1,X)
+            else :
+                mat1 = np.kron(mat1,I)
+
+        mat2 = np.identity(1)
+        for j in range(n):
+            if i + 1 == j :
+                mat2 = np.kron(mat2,X)
+            else :
+                mat2 = np.kron(mat2,I)
+        
+        res = res + np.dot(mat1,mat2)
+
+    return res
+
+def main():
+    n = int(input())
+    mat = H(n)
+    print(mat[0][0])
+
+if __name__ == "__main__":
+    main()
+```
+
+对于 $H$ 在 $(1,0,0,\cdots)$ 下的期望值，实际上可以简单计算得到其实际值恰好为 $n$。
+
+## 2-5
+
+列向量为 
+
+$$
+\begin{pmatrix}
+0\\
+0\\
+\frac{1}{\sqrt{2}}\\
+0\\
+0\\
+-\frac{1}{\sqrt{2}}\\
+0\\
+0\\
+\end{pmatrix}
+$$
+
+## 2-6
+
+袜，怎么还要重写，我先做后面的
+
+# 3 导数与梯度下降
+
+## 3-1
+
+```python
+import numpy as np
+
+def derivative(f, x):
+    dx = 1e-5
+    y = f(x)
+    res = np.ones_like(x)
+    for i in range(len(x)):
+        x[i] = x[i] + dx
+        dy = f(x) - y
+        res[i] = dy / dx
+        x[i] = x[i] - dx
+
+    return res
+
+# test
+x = np.array([1.0,2.0,3.0])
+def func(x):
+    return 3 * x[0] * x[0] * x[1] * np.sqrt(x[2])
+print(derivative(func,x))
+```
+
+## 3-2
+
+有 $f'(x)=A\cos(x+B)=A\sin(x+\frac{\pi}{2}+B)=f(x+\frac{\pi}{2})-C$
+
+## 3-3
+
+2-3 部分的解答已经给出了 $f(\theta)$ 的化简表达式
+
+## 3-4
+
+以下的代码取的是 $\hat{P_1}=X,\hat{P_2}=Z$，可以修改函数得到更多的情况
+
+```python
+import numpy as np
+import tensorcircuit as tc
+
+K = tc.set_backend("tensorflow")
+def f(x):
+    c = tc.Circuit(1)
+    c.rx(0 , theta = x)
+    return K.real(c.expectation_ps(z = [0]))
+
+f_grad = K.grad(f)
+
+x = K.convert_to_tensor(np.random.randn(1))
+lr = 0.05
+step = 100
+
+for _ in range(step):
+    g = f_grad(x)
+    x = x - g * lr
+
+print(f"min : theta = {x} f = {f(x)}")
+```
+
+# 4 测量
+
+## 4-1
+
+```python
+import numpy as np
+import tensorcircuit as tc
+
+c = tc.Circuit(2)
+c.h(0)
+c.cx(0, 1)
+
+print(c.expectation([tc.gates.z(), [0]], [tc.gates.z(), [1]]))
+```
+
+可以看到输出为 `(0.99999994+0j)`，说明两个 bit 正相关
+
+## 4-2
+
+运行以下代码：
+
+```python
+import numpy as np
+import tensorcircuit as tc
+
+c = tc.Circuit(2)
+c.h(0)
+c.cx(0, 1)
+
+count = {}
+for _ in range(10000):
+    vec, _ = c.measure(0,1)
+    vec = tuple(vec)
+    if vec in count:
+        count[vec] += 1
+    else:
+        count[vec] = 1
+
+print(count)
+```
+
+输出为
+
+```
+{(0.0, 0.0): 5056, (1.0, 1.0): 4944}
+```
+
+即，出现了 $5056$ 次 $|00\rangle$，和 $4944$ 次 $|11\rangle$，和预期的 $5000:5000$ 有 $56$ 的偏差。
+
+## 4-3
+
+利用上述代码又分别测试了 $1000$ 次，$100000$ 次，得到的结果分别是 $540:460,49966:50034$，看上去当测量次数足够大的时候误差次数并不随测量次数也变大，当然较小的时候还是比较接近 $1:1$。
